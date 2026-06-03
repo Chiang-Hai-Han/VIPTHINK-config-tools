@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import mimetypes
@@ -29,7 +29,7 @@ SMALL_TEACHER_IMAGE_DIR = ROOT / "待上传小老师图片文件夹"
 TEMPLATE_FILE = ROOT / "resource-copy-template.json"
 COURSEWARE_DATA_DIR = ROOT / "课件数据"
 PENDING_DATA_DIR = ROOT / "待处理数据"
-IMPORT_TEMPLATE_FILE = Path(r"C:\Users\jianghaihan\Documents\自动下载图片\批量新增课件模板 (1).xlsx")
+IMPORT_TEMPLATE_FILE = ROOT / "批量新增课件模板.xlsx"
 SHEET_NAME = "课件上架前配置"
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("VIPTHINK_PRELAUNCH_ASSISTANT_PORT", "8769"))
