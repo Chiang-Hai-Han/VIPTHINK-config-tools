@@ -1,0 +1,18 @@
+﻿{
+  "manifest_version": 3,
+  "name": "批量语种修改工具",
+  "version": "1.0.0",
+  "description": "批量修改课件语种。支持 xx 通配、01~50 范围、精确匹配。",
+  "permissions": ["storage", "webRequest"],
+  "host_permissions": [
+    "https://jy.vipthink.cn/*",
+    "https://aic-gw.vipthink.cn/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "批量语种修改",
+    "default_popup": "popup.html"
+  }
+}

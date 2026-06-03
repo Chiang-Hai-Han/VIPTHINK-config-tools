@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --line: #d9e0ea;
+        --text: #1f2937;
+        --muted: #667085;
+        --primary: #1f6feb;
+        --primary-dark: #1557b0;
+        --danger: #b42318;
+        --soft: #eef4ff;
+        --success: #16794c;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        width: 430px;
+        min-height: 520px;
+        max-height: 600px;
+        margin: 0;
+        padding: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, "Microsoft YaHei", "Segoe UI", sans-serif;
+        font-size: 13px;
+        overflow-y: auto;
+      }
+
+      .shell {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .title { min-width: 0; }
+      .title strong { display: block; font-size: 15px; line-height: 20px; }
+      .title span { display: block; color: var(--muted); line-height: 18px; }
+
+      button {
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover { border-color: #9db5d6; background: #f8fbff; }
+      button:active { transform: translateY(1px); }
+      button:disabled { cursor: wait; }
+
+      .primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+        font-weight: 650;
+      }
+
+      .primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+      .danger {
+        border-color: #f3b0aa;
+        color: var(--danger);
+      }
+
+      .toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 0;
+        background: var(--soft);
+        color: #17427c;
+        font-weight: 700;
+      }
+
+      .chevron {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        background: #dbeafe;
+      }
+
+      .content { display: none; padding: 12px; }
+      .content.open { display: block; }
+
+      .section {
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section:first-child { padding-top: 0; border-top: 0; }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .section-title strong { font-size: 13px; }
+
+      .badge {
+        color: var(--success);
+        background: #eaf7ef;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .grid button { width: 100%; }
+
+      pre {
+        margin: 10px 0 0;
+        max-height: 190px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #101828;
+        color: #e6edf7;
+        border-radius: 7px;
+        padding: 10px;
+        line-height: 18px;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 12px;
+        background: rgba(16, 24, 40, 0.45);
+        overflow-y: auto;
+      }
+
+      .modal.open { display: flex; }
+
+      .dialog {
+        width: 100%;
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 36px rgba(16, 24, 40, 0.22);
+        padding: 12px;
+      }
+
+      .dialog h2 {
+        margin: 0 0 8px;
+        font-size: 15px;
+        line-height: 20px;
+      }
+
+      .dialog p {
+        margin: 0 0 8px;
+        color: var(--muted);
+        line-height: 19px;
+      }
+
+      .existing {
+        margin: 8px 0 12px;
+        padding: 9px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 7px;
+        color: #7c2d12;
+        line-height: 18px;
+        word-break: break-word;
+      }
+
+      .dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+
+      .field {
+        width: 100%;
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 7px 9px;
+        font: inherit;
+        color: var(--text);
+      }
+
+      .hint {
+        margin: 6px 0 10px;
+        color: var(--muted);
+        line-height: 18px;
+      }
+
+      .full-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .form-grid label {
+        display: grid;
+        gap: 4px;
+        color: var(--muted);
+        line-height: 18px;
+      }
+
+      select {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 6px 8px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="title">
+          <strong>教研配置助手 By 海瀚</strong>
+          <span>本地助手端口 8769</span>
+        </div>
+        <button id="health">状态</button>
+      </div>
+
+      <button id="prelaunchToggle" class="toggle" aria-expanded="false">
+        <span>课件上架前配置</span>
+        <span class="chevron">›</span>
+      </button>
+
+      <div id="prelaunchPanel" class="content">
+        <div class="section">
+          <div class="section-title">
+            <strong>封面上传</strong>
+            <span class="badge">图片</span>
+          </div>
+          <div class="grid">
+            <button id="dry">检查封面上传任务</button>
+            <button id="start" class="primary">开始上传封面</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <strong>关联线上作业</strong>
+            <span class="badge">线上作业</span>
+          </div>
+          <div class="grid">
+            <button id="relationDry">检查线上作业关联</button>
+            <button id="relationStart" class="primary">开始关联线上作业</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <strong>资源复制</strong>
+            <span class="badge">不复制课后总结</span>
+          </div>
+          <div class="grid">
+            <button id="resourceCopyDry">资源复制检查</button>
+            <button id="resourceCopyStart" class="primary">开始资源复制</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="dataCopyToggle" class="toggle" aria-expanded="false">
+        <span>数据复制</span>
+        <span class="chevron">›</span>
+      </button>
+
+      <div id="dataCopyPanel" class="content">
+        <div class="section">
+          <div class="section-title">
+            <strong>课件信息</strong>
+            <span class="badge">Excel</span>
+          </div>
+          <div class="grid">
+            <button id="copyCoursewareInfo" class="primary">复制课件信息</button>
+            <button id="fillTemplate">一键填表</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <strong>小老师</strong>
+            <span class="badge">Excel</span>
+          </div>
+          <div class="grid">
+            <button id="copySmallTeacher" class="primary">小老师复制</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="postlaunchToggle" class="toggle" aria-expanded="false">
+        <span>上架后配置</span>
+        <span class="chevron">›</span>
+      </button>
+
+      <div id="postlaunchPanel" class="content">
+        <div class="section">
+          <div class="section-title">
+            <strong>知识点复制</strong>
+            <span class="badge">知识点</span>
+          </div>
+          <div class="grid">
+            <button id="knowledgeCopyLocal">查询本地</button>
+            <button id="knowledgeCopyAuto" class="primary">自动匹配（仅台-粤）</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <strong>小老师复制</strong>
+            <span class="badge">上架后</span>
+          </div>
+          <div class="grid">
+            <button id="smallTeacherUploadLocal">从本地上传</button>
+            <button id="smallTeacherUploadAuto" class="primary">自动匹配（仅台-粤）</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <pre id="log">请先启动统一本地助手，然后展开“课件上架前配置”。作者：海瀚</pre>
+
+    <div id="overwriteModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2>检测到已有内容</h2>
+        <p id="overwriteMessage"></p>
+        <div id="overwriteExisting" class="existing"></div>
+        <div class="dialog-actions">
+          <button id="overwriteOnce" class="primary">覆盖</button>
+          <button id="overwriteAll">全部覆盖</button>
+          <button id="overwriteCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="coursewareDataModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2>复制课件信息</h2>
+        <input id="coursewareSearchName" class="field" placeholder="例如：s4_v8_xx_TW">
+        <p class="hint">
+          支持 xx 通配数字、01~50 范围、完整编码精确匹配；只匹配完整课件编码，不扩展到 _hw 等后缀。
+        </p>
+        <div class="full-actions">
+          <button id="coursewareDataStart" class="primary">开始复制</button>
+          <button id="coursewareDataCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fillTemplateModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2>一键填表</h2>
+        <div class="form-grid">
+          <label>语种<select id="optionLanguage"></select></label>
+          <label>科目<select id="optionSubject"></select></label>
+          <label>课件类型<select id="optionCourseType"></select></label>
+          <label>课件难度<select id="optionDifficulty"></select></label>
+          <label>课件版本<select id="optionVersion"></select></label>
+        </div>
+        <p class="hint">将使用最近一次课件数据生成模板表，并下载封面到同名文件夹；不会把图片插入表格。</p>
+        <div class="full-actions">
+          <button id="fillTemplateStart" class="primary">开始填表</button>
+          <button id="fillTemplateCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="smallTeacherModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2>小老师复制</h2>
+        <input id="smallTeacherSearchName" class="field" placeholder="例如：s4_v8_xx_YY">
+        <p class="hint">
+          匹配方式同课件信息。首次使用前，请先打开一次小老师详情页作为监听样本。
+        </p>
+        <div class="full-actions">
+          <button id="smallTeacherStart" class="primary">开始复制</button>
+          <button id="smallTeacherCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="autoMatchModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2 id="autoMatchTitle">自动匹配</h2>
+        <input id="autoMatchSearchName" class="field" placeholder="例如：s4_v8_01_TW">
+        <p class="hint">支持 xx 通配数字、01~50 范围、完整编码精确匹配；仅用于台-粤同编号匹配。</p>
+        <div class="full-actions">
+          <button id="autoMatchStart" class="primary">开始</button>
+          <button id="autoMatchCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="workbookChoiceModal" class="modal" role="dialog" aria-modal="true">
+      <div class="dialog">
+        <h2>选择表格</h2>
+        <select id="workbookChoice"></select>
+        <p class="hint">检测到多个可用表格，请选择本次要使用的文件。</p>
+        <div class="full-actions">
+          <button id="workbookChoiceStart" class="primary">确定</button>
+          <button id="workbookChoiceCancel" class="danger">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

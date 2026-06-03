@@ -1,0 +1,191 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d9e0ea;
+      --text: #1f2937;
+      --muted: #667085;
+      --primary: #1f6feb;
+      --primary-dark: #1557b0;
+      --danger: #b42318;
+      --success: #16794c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 450px;
+      margin: 0;
+      padding: 14px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, "Microsoft YaHei", "Segoe UI", sans-serif;
+      font-size: 13px;
+    }
+
+    .shell {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .top strong {
+      font-size: 15px;
+      line-height: 20px;
+    }
+
+    .top span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    button:hover { border-color: #9db5d6; background: #f8fbff; }
+    button:active { transform: translateY(1px); }
+    button:disabled { cursor: wait; opacity: 0.65; }
+
+    .primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 650;
+    }
+
+    .primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+    .body-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .field {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px 10px;
+      font: inherit;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+    }
+
+    select {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 6px 10px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    pre {
+      margin: 0;
+      max-height: 200px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #101828;
+      color: #e6edf7;
+      border-radius: 7px;
+      padding: 10px;
+      line-height: 18px;
+      font-size: 12px;
+    }
+
+    .lang-label {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <strong>批量语种修改</strong>
+      <span>v1.0</span>
+    </div>
+
+    <div class="body-content">
+      <input id="searchName" class="field" placeholder="例如：s4_v8_xx_TW" autofocus>
+      <p class="hint">支持 xx 通配数字、01~50 范围、完整编码精确匹配。输入编码不含 _hw 时不匹配 _hw 课件，输入含 _hw 后缀时匹配 _hw 课件。</p>
+
+      <label class="lang-label" for="languageSelect">目标语种</label>
+      <select id="languageSelect">
+        <option value="1">简体&amp;普通话</option>
+        <option value="2">繁体&amp;粤语</option>
+        <option value="3">英语；英语</option>
+        <option value="4" selected>繁体&amp;台湾普通话</option>
+      </select>
+
+      <div class="btn-row">
+        <button id="healthBtn">检查登录状态</button>
+        <button id="startBtn" class="primary">开始修改</button>
+      </div>
+    </div>
+
+    <pre id="log">输入课件编码，选择目标语种，点击「开始修改」。</pre>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

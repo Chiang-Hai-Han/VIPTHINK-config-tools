@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "VIPTHINK 教研配置助手 By 海瀚",
+  "version": "1.0.0",
+  "description": "作者海瀚。配合本地助手，批量完成课件上架前配置。",
+  "permissions": ["storage", "webRequest"],
+  "host_permissions": [
+    "https://jy.vipthink.cn/*",
+    "https://aic-gw.vipthink.cn/*",
+    "https://cc-vipthink-pub.oss-accelerate.aliyuncs.com/*",
+    "http://127.0.0.1:8765/*",
+    "http://127.0.0.1:8767/*",
+    "http://127.0.0.1:8768/*",
+    "http://127.0.0.1:8769/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "教研配置助手 By 海瀚",
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,156 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --line: #d9e0ea;
+        --text: #1f2937;
+        --muted: #667085;
+        --primary: #1f6feb;
+        --primary-dark: #1557b0;
+        --danger: #b42318;
+        --soft: #eef4ff;
+        --success: #16794c;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        width: 430px;
+        min-height: 320px;
+        max-height: 600px;
+        margin: 0;
+        padding: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, "Microsoft YaHei", "Segoe UI", sans-serif;
+        font-size: 13px;
+        overflow-y: auto;
+      }
+
+      .shell {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .title { min-width: 0; }
+      .title strong { display: block; font-size: 15px; line-height: 20px; }
+      .title span { display: block; color: var(--muted); line-height: 18px; }
+
+      button {
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover { border-color: #9db5d6; background: #f8fbff; }
+      button:active { transform: translateY(1px); }
+      button:disabled { cursor: wait; }
+
+      .primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+        font-weight: 650;
+      }
+
+      .primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+      .section {
+        padding: 12px;
+      }
+
+      .section-title {
+        margin-bottom: 8px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      pre {
+        margin: 10px 0 0;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #101828;
+        color: #e6edf7;
+        border-radius: 7px;
+        padding: 10px;
+        line-height: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="title">
+          <strong>讲次配置工具 By 海瀚</strong>
+          <span>本地助手端口 8770</span>
+        </div>
+        <button id="health">状态</button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">讲次自动配置</div>
+        <button id="startConfig" class="primary" style="width:100%">开始配置</button>
+        <button id="copyConfig" class="primary" style="width:100%;margin-top:8px">复制配置</button>
+        <p style="margin:8px 0 0;color:var(--muted);line-height:18px;font-size:12px">
+          开始配置：关联课件、讲次名称、故事场景、上课人数。
+          复制配置：从粤语讲次复制知识模块、益智目标、核心能力到目标讲次。
+        </p>
+      </div>
+    </div>
+
+        </div>
+
+    <div id="overwriteModal" class="modal" role="dialog" aria-modal="true" style="display:none;position:fixed;inset:0;align-items:flex-start;justify-content:center;padding:12px;background:rgba(16,24,40,0.45);overflow-y:auto;z-index:1000;">
+      <div class="dialog" style="width:100%;max-height:calc(100vh - 24px);overflow-y:auto;background:#fff;border-radius:8px;border:1px solid var(--line);box-shadow:0 18px 36px rgba(16,24,40,0.22);padding:12px;">
+        <h2 style="margin:0 0 8px;font-size:15px;line-height:20px;">检测到已有内容</h2>
+        <p id="overwriteMessage" style="margin:0 0 8px;color:var(--muted);line-height:19px;"></p>
+        <div id="overwriteExisting" class="existing" style="margin:8px 0 12px;padding:9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;color:#7c2d12;line-height:18px;word-break:break-word;"></div>
+        <div class="dialog-actions" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <button id="overwriteOnce" class="primary" style="background:var(--primary);border-color:var(--primary);color:#fff;font-weight:650;min-height:34px;border-radius:7px;cursor:pointer;">覆盖</button>
+          <button id="overwriteAll" style="min-height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;">全部覆盖</button>
+          <button id="overwriteCancel" style="min-height:34px;border:1px solid #f3b0aa;border-radius:7px;background:#fff;color:var(--danger);cursor:pointer;">取消</button>
+        </div>
+      </div>
+    </div>    <div id="overwriteModal" style="display:none;position:fixed;inset:0;align-items:flex-start;justify-content:center;padding:12px;background:rgba(16,24,40,0.45);overflow-y:auto;z-index:1000;">
+      <div style="width:100%;max-height:calc(100vh - 24px);overflow-y:auto;background:#fff;border-radius:8px;border:1px solid #d9e0ea;box-shadow:0 18px 36px rgba(16,24,40,0.22);padding:12px;">
+        <h2 style="margin:0 0 8px;font-size:15px;">检测到已有内容</h2>
+        <p id="overwriteMessage" style="margin:0 0 8px;color:#667085;"></p>
+        <div id="overwriteExisting" style="margin:8px 0 12px;padding:9px;background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;color:#7c2d12;word-break:break-word;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <button id="overwriteOnce" style="background:#1f6feb;border:1px solid #1f6feb;color:#fff;font-weight:650;min-height:34px;border-radius:7px;cursor:pointer;">覆盖</button>
+          <button id="overwriteAll" style="min-height:34px;border:1px solid #d9e0ea;border-radius:7px;background:#fff;cursor:pointer;">全部覆盖</button>
+          <button id="overwriteCancel" style="min-height:34px;border:1px solid #f3b0aa;border-radius:7px;background:#fff;color:#b42318;cursor:pointer;">取消</button>
+        </div>
+      </div>
+    </div>
+<pre id="log">请先启动讲次配置助手，再点击"开始配置"。作者：海瀚</pre>
+
+    <script src="chapter_config_popup.js"></script>
+  </body>
+</html>
+
+
+
