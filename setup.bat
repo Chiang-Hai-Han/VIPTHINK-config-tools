@@ -1,10 +1,25 @@
 ﻿@echo off
-chcp 65001 >nul
+chcp 65001 >nul 2>nul
 setlocal enabledelayedexpansion
 
 set "TITLE=VIPTHINK 教研配置助手 - 一键安装"
 title %TITLE%
 
+:: ═══════════════════════════════════════
+:: 防止闪退：所有错误都会暂停
+:: ═══════════════════════════════════════
+if "%VIPTHINK_SETUP_GUARD%"=="1" goto :main
+set "VIPTHINK_SETUP_GUARD=1"
+call "%~f0" 2>&1
+echo.
+echo ================================================
+echo   安装完成（窗口将在 30 秒后关闭）
+echo   或按任意键立即关闭...
+echo ================================================
+pause >nul
+exit /b
+
+:main
 echo.
 echo ================================================
 echo   VIPTHINK 教研配置助手 - 一键安装
@@ -14,56 +29,112 @@ echo.
 :: ──────────────────────────────────────
 :: 1. 检测 Python
 :: ──────────────────────────────────────
-set "PYTHON_FOUND=0"
-for %%P in (python.exe python3.exe) do (
-    where %%P >nul 2>nul
-    if !errorlevel!==0 (
-        set "PYTHON_EXE=%%P"
-        set "PYTHON_FOUND=1"
-        goto :python_done
+echo [Step 1/5] 正在检测 Python...
+
+set "PYTHON_EXE="
+
+:: 方法 A: PATH 中查找
+for %%C in (python.exe python3.exe) do (
+    for /f "delims=" %%P in ('where %%C 2^>nul') do (
+        if exist "%%P" (
+            set "PYTHON_EXE=%%P"
+            goto :python_found
+        )
     )
 )
 
-:: 尝试常见安装路径
+:: 方法 B: 扫描常见安装目录
 for %%D in (
-    "%LocalAppData%\Programs\Python\Python312\python.exe"
-    "%LocalAppData%\Programs\Python\Python311\python.exe"
-    "%ProgramFiles%\Python312\python.exe"
-    "%ProgramFiles%\Python311\python.exe"
-    "C:\Python312\python.exe"
-    "C:\Python311\python.exe"
+    "%LocalAppData%\Programs\Python\Python313"
+    "%LocalAppData%\Programs\Python\Python312"
+    "%LocalAppData%\Programs\Python\Python311"
+    "%LocalAppData%\Programs\Python\Python310"
+    "%ProgramFiles%\Python313"
+    "%ProgramFiles%\Python312"
+    "%ProgramFiles%\Python311"
+    "%ProgramFiles%\Python310"
+    "C:\Python313"
+    "C:\Python312"
+    "C:\Python311"
+    "C:\Python310"
+    "%UserProfile%\AppData\Local\Programs\Python\Python313"
+    "%UserProfile%\AppData\Local\Programs\Python\Python312"
+    "%UserProfile%\AppData\Local\Programs\Python\Python311"
 ) do (
-    if exist %%D (
-        set "PYTHON_EXE=%%D"
-        set "PYTHON_FOUND=1"
-        goto :python_done
+    if exist "%%D\python.exe" (
+        set "PYTHON_EXE=%%D\python.exe"
+        goto :python_found
     )
 )
 
-:python_done
-if "%PYTHON_FOUND%"=="0" (
-    echo [错误] 未找到 Python！
-    echo.
-    echo 请到 https://www.python.org/downloads/ 下载并安装 Python 3.11+
-    echo 安装时请勾选 "Add Python to PATH"
-    echo.
+:: 方法 C: 从注册表读取安装路径
+for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Python\PythonCore" /s /v "ExecutablePath" 2^>nul ^| findstr "ExecutablePath"') do (
+    if exist "%%B" (
+        set "PYTHON_EXE=%%B"
+        goto :python_found
+    )
+)
+for /f "tokens=2*" %%A in ('reg query "HKLM\Software\Python\PythonCore" /s /v "ExecutablePath" 2^>nul ^| findstr "ExecutablePath"') do (
+    if exist "%%B" (
+        set "PYTHON_EXE=%%B"
+        goto :python_found
+    )
+)
+
+:: 没找到 Python
+echo   [X] 未找到 Python 3.10+
+echo.
+echo   ▸ 正在尝试通过 winget 自动安装 Python...
+where winget >nul 2>nul
+if %errorlevel%==0 (
+    echo   正在下载安装 Python 3.12（约 25MB，请耐心等待）...
+    winget install Python.Python.3.12 --accept-source-agreements --accept-package-agreements --silent 2>nul
+    if %errorlevel%==0 (
+        echo   [OK] Python 安装完成！
+        echo   请重新打开一个命令行窗口，然后再次运行 setup.bat
+        echo.
+        echo   按任意键退出...
+        pause >nul
+        exit /b 0
+    )
+)
+
+echo.
+echo   ============================================
+echo   未能自动安装 Python，请手动安装：
+echo   1. 打开浏览器，访问 https://www.python.org/downloads/
+echo   2. 下载 Python 3.11+ 安装程序
+echo   3. 安装时务必勾选 "Add Python to PATH"
+echo   4. 安装完成后重新运行 setup.bat
+echo   ============================================
+echo.
+echo   按任意键退出...
+pause >nul
+exit /b 1
+
+:python_found
+echo   [OK] Python 路径：!PYTHON_EXE!
+"%PYTHON_EXE%" --version 2>&1
+if %errorlevel% neq 0 (
+    echo   [X] Python 无法运行，请检查安装
     pause
     exit /b 1
 )
-echo [Step 1/4] Python 已找到：%PYTHON_EXE%
-for /f "tokens=*" %%V in ('"%PYTHON_EXE%" --version 2^>^&1') do echo   版本：%%V
 
 :: ──────────────────────────────────────
 :: 2. 安装 Python 依赖
 :: ──────────────────────────────────────
 echo.
-echo [Step 2/4] 检查并安装 Python 依赖...
+echo [Step 2/5] 检查并安装 Python 依赖...
+
+echo   ▸ 检查 openpyxl...
 "%PYTHON_EXE%" -c "import openpyxl" 2>nul
 if %errorlevel% neq 0 (
-    echo   正在安装 openpyxl...
-    "%PYTHON_EXE%" -m pip install openpyxl -q
+    echo   ▸ 正在安装 openpyxl...
+    "%PYTHON_EXE%" -m pip install openpyxl -q --disable-pip-version-check 2>&1
     if !errorlevel! neq 0 (
-        echo   [警告] openpyxl 安装失败，课件表格读写功能可能无法使用
+        echo   [警告] openpyxl 安装失败，表格功能不可用
+        echo   可尝试手动安装: pip install openpyxl
     ) else (
         echo   [OK] openpyxl 安装成功
     )
@@ -72,115 +143,169 @@ if %errorlevel% neq 0 (
 )
 
 :: ──────────────────────────────────────
-:: 3. 检查必要文件和数据目录
+:: 3. 检查项目文件完整性
 :: ──────────────────────────────────────
 echo.
-echo [Step 3/4] 检查必要文件...
+echo [Step 3/5] 检查项目文件完整性...
 cd /d "%~dp0"
-
 set "ALL_OK=1"
 
-:: 必要文件列表
-call :check_file "chrome_extension\manifest.json"         "Chrome 插件（主配置）"
-call :check_file "chrome_extension\background.js"         "Chrome 插件后台脚本"
-call :check_file "chrome_extension\popup.html"            "Chrome 插件弹窗界面"
-call :check_file "chrome_extension\popup.js"              "Chrome 插件弹窗逻辑"
-call :check_file "batch_language_updater\manifest.json"   "语种修改插件"
-call :check_file "batch_language_updater\background.js"   "语种修改后台脚本"
-call :check_file "batch_language_updater\popup.html"      "语种修改弹窗界面"
-call :check_file "batch_language_updater\popup.js"        "语种修改弹窗逻辑"
-call :check_file "local_prelaunch_assistant.py"           "本地配置服务（上架前后）"
-call :check_file "local_chapter_config_assistant.py"      "本地配置服务（讲次）"
-call :check_file "resource-copy-template.json"            "资源复制模板"
-call :check_file "批量新增课件模板.xlsx"                    "批量新增模板"
+echo   --- 核心服务文件 ---
+call :check "local_prelaunch_assistant.py"        "本地配置服务（上架前后）" 1
+call :check "local_chapter_config_assistant.py"   "本地配置服务（讲次）"     1
+call :check "resource-copy-template.json"         "资源复制模板"             1
+call :check "批量新增课件模板.xlsx"                 "批量新增模板"             1
 
-if "%ALL_OK%"=="0" (
-    echo.
-    echo [错误] 上列文件缺失，请确保从 GitHub 完整克隆项目！
-    pause
-    exit /b 1
-)
+echo   --- Chrome 插件：主配置 ---
+call :check "chrome_extension\manifest.json"       "插件清单"                 1
+call :check "chrome_extension\background.js"       "后台脚本"                 1
+call :check "chrome_extension\popup.html"          "弹窗界面"                 1
+call :check "chrome_extension\popup.js"            "弹窗逻辑"                 1
 
-:: 创建必要目录
+echo   --- Chrome 插件：语种修改 ---
+call :check "batch_language_updater\manifest.json"  "插件清单"               1
+call :check "batch_language_updater\background.js"  "后台脚本"               1
+call :check "batch_language_updater\popup.html"     "弹窗界面"               1
+call :check "batch_language_updater\popup.js"       "弹窗逻辑"               1
+
+echo   --- 启动脚本 ---
+call :check "run_prelaunch_assistant.bat"          "上架前后配置启动脚本"     1
+call :check "run_chapter_config_assistant.bat"     "讲次配置启动脚本"         1
+
+echo   --- 配置表（可选） ---
+call :check "课件上架前配置表.xlsx"                  "上架前任务清单"          0
+call :check "课件上架后配置表.xlsx"                  "上架后任务清单"          0
+call :check "小老师配置表.xlsx"                      "小老师任务清单"          0
+call :check "讲次配置表.xlsx"                        "讲次任务清单"            0
+
+echo   --- 工作目录 ---
 for %%D in ("待上传图片文件夹" "待上传小老师图片文件夹" "课件数据" "待处理数据") do (
     if not exist %%D (
         mkdir %%D >nul 2>nul
-        echo   [创建目录] %%~D
-    )
-)
-
-:: 检查可选配置表
-echo   --- 配置表（可选，按需创建）---
-for %%F in ("课件上架前配置表.xlsx" "课件上架后配置表.xlsx" "小老师配置表.xlsx" "讲次配置表.xlsx") do (
-    if exist %%F (
-        echo   [OK] %%~F
+        echo   [创建] %%~D
     ) else (
-        echo   [缺失] %%~F   ^(请从空模板新建或复制^)
+        echo   [OK] %%~D
     )
 )
 
-echo.
-echo   [OK] 所有必要文件检查通过！
+if "%ALL_OK%"=="0" (
+    echo.
+    echo ================================================
+    echo [错误] 有必需文件缺失！
+    echo 请确保从 GitHub 完整克隆项目：
+    echo git clone https://github.com/Chiang-Hai-Han/VIPTHINK-config-tools.git
+    echo ================================================
+    pause
+    exit /b 1
+)
+echo   [OK] 所有必需文件检查通过！
 
 :: ──────────────────────────────────────
 :: 4. Chrome 扩展加载指引
 :: ──────────────────────────────────────
 echo.
-echo [Step 4/4] Chrome 扩展安装指引
+echo [Step 4/5] Chrome 扩展安装
+
+:: 尝试检测 Chrome/Edge 浏览器
+set "BROWSER="
+for %%B in (
+    "%LocalAppData%\Google\Chrome\Application\chrome.exe"
+    "%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+    "%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+    "C:\Program Files\Google\Chrome\Application\chrome.exe"
+) do (
+    if exist %%B (
+        set "BROWSER=%%B"
+        goto :browser_found
+    )
+)
+for %%B in (
+    "%LocalAppData%\Microsoft\Edge\Application\msedge.exe"
+    "%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+) do (
+    if exist %%B (
+        set "BROWSER=%%B"
+        goto :browser_found
+    )
+)
+
+:browser_found
+if defined BROWSER (
+    echo   检测到浏览器：!BROWSER!
+) else (
+    echo   未检测到 Chrome/Edge 浏览器路径
+)
+
 echo.
-echo   请按以下步骤加载两个 Chrome 插件：
+echo   请按以下步骤加载 Chrome 插件：
 echo.
-echo   (1) 打开 Chrome 浏览器
+echo   (1) 打开 Chrome / Edge 浏览器
 echo   (2) 地址栏输入 chrome://extensions/ 并回车
-echo   (3) 打开右上角「开发者模式」
-echo   (4) 点击「加载已解压的扩展程序」
-echo        → 选择目录：%~dp0chrome_extension
-echo   (5) 再次点击「加载已解压的扩展程序」
-echo        → 选择目录：%~dp0batch_language_updater
+echo        （Edge 浏览器输入 edge://extensions/）
+echo   (3) 打开右上角「开发人员模式」开关
+echo   (4) 点击「加载解压缩的扩展」
+echo        → 选择目录：chrome_extension
+echo   (5) 再次点击「加载解压缩的扩展」
+echo        → 选择目录：batch_language_updater
 echo.
-echo   ▸ 是否现在打开 Chrome 扩展管理页？[Y/N]
+echo   ▸ 是否现在打开 Chrome 扩展管理页？(Y/N)
 set /p OPEN_CHROME=
 if /i "%OPEN_CHROME%"=="Y" (
-    start chrome chrome://extensions/
-    echo   已打开 Chrome 扩展管理页，请按上方步骤操作。
+    if defined BROWSER (
+        start "" "!BROWSER!" chrome://extensions/
+        echo   已打开浏览器，请按上方步骤操作。
+    ) else (
+        echo   未找到浏览器，请手动打开 chrome://extensions/
+    )
 )
 
 :: ──────────────────────────────────────
-:: 安装完成
+:: 5. 完成
 :: ──────────────────────────────────────
 echo.
+echo [Step 5/5] 完成！
+echo.
 echo ================================================
-echo   安装完成！
+echo   VIPTHINK 教研配置助手 - 安装成功！
 echo ================================================
 echo.
-echo   启动方式：
+echo   ▸ 启动方式：
 echo.
-echo   A) 课件上架前后配置：
-echo      运行  run_prelaunch_assistant.bat
-echo      或手动 python local_prelaunch_assistant.py
-echo      然后在 Chrome 中打开 jy.vipthink.cn 使用
+echo     A) 课件上架前/后配置：
+echo        双击运行  run_prelaunch_assistant.bat
 echo.
-echo   B) 讲次配置：
-echo      运行  run_chapter_config_assistant.bat
-echo      或手动 python local_chapter_config_assistant.py
+echo     B) 讲次自动配置：
+echo        双击运行  run_chapter_config_assistant.bat
 echo.
-echo   C) 批量语种修改：
-echo      直接在 Chrome 点击「批量语种修改」插件图标
+echo     C) 批量语种修改：
+echo        在 Chrome 工具栏点击「批量语种修改」插件图标
 echo.
-echo   使用前请先在 jy.vipthink.cn 登录并刷新一次页面，
-echo   让插件捕获登录 Session-Id。
+echo   ▸ 使用提示：
+echo     - 启动本地助手后，在 jy.vipthink.cn 登录并刷新页面
+echo     - 然后点击 Chrome 插件图标开始操作
+echo     - 状态日志会显示在插件弹窗底部
 echo.
-pause
-exit /b 0
+echo ================================================
+
+:: 清除 guard 变量让最终暂停生效
+set "VIPTHINK_SETUP_GUARD="
+goto :eof
 
 :: ──────────────────────────────────────
-:: 子函数：检查文件
+:: 子函数：check 文件是否存在
+::   %1 = 文件路径（相对于脚本目录）
+::   %2 = 描述文字
+::   %3 = 1=必需 / 0=可选
 :: ──────────────────────────────────────
-:check_file
+:check
 if exist "%~1" (
     echo   [OK] %~2
 ) else (
-    echo   [MISSING] %~2  ^(%~1^)
-    set "ALL_OK=0"
+    if "%~3"=="1" (
+        echo   [缺少] %~2  ^(%~1^)  ★必需
+        set "ALL_OK=0"
+    ) else (
+        echo   [缺失] %~2  ^(可选^)
+    )
 )
 exit /b 0
