@@ -1,0 +1,25 @@
+{
+  "name": "VIPTHINK-config-tools",
+  "description": "VIPTHINK 教研配置助手 - 课件上架前后配置工具、批量语种修改、讲次配置",
+  "type": "tool",
+  "status": "active",
+  "maturity": "production",
+  "owner": "海瀚",
+  "repository": "https://github.com/Chiang-Hai-Han/VIPTHINK-config-tools",
+  "language": ["Python", "JavaScript"],
+  "framework": "Chrome Extension + Python Local Server",
+  "platform": ["Windows", "Chrome"],
+  "version": "0.1.0",
+  "features": [
+    "封面图片自动上传到阿里云 OSS",
+    "线上作业课件关联配置",
+    "粤语→台湾课件资源复制",
+    "讲次自动配置（关联课件/名称/场景/人数）",
+    "批量语种修改（支持通配符匹配）",
+    "知识模块复制",
+    "小老师上传",
+    "接口监听调试工具"
+  ],
+  "last_updated": "2026-06-05",
+  "license": "MIT"
+}
