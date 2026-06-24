@@ -276,6 +276,10 @@ document.getElementById("resourceCopyStart").addEventListener("click", (event) =
   sendWithPayload("START_RESOURCE_COPY", { configPath: "" }, event.currentTarget);
 });
 
+document.getElementById("subjectNameUploadStart").addEventListener("click", (event) => {
+  sendWithPayload("START_SUBJECT_NAME_UPLOAD", { configPath: "" }, event.currentTarget);
+});
+
 document.getElementById("copyCoursewareInfo").addEventListener("click", () => {
   coursewareSearchName.value = "";
   coursewareDataModal.classList.add("open");
@@ -307,6 +311,10 @@ document.getElementById("coursewareDataStart").addEventListener("click", async (
 
 document.getElementById("fillTemplate").addEventListener("click", () => {
   openFillTemplateModal();
+});
+
+document.getElementById("uploadCoursewareInfo").addEventListener("click", async (event) => {
+  await sendWithPayload("START_COURSEWARE_INFO_UPLOAD", { configPath: "" }, event.currentTarget);
 });
 
 document.getElementById("fillTemplateCancel").addEventListener("click", () => {

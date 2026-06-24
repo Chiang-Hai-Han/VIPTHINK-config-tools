@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>专题解析视频复制助手</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 14px;
+      width: 360px;
+      font: 14px/1.5 "Microsoft YaHei", sans-serif;
+      color: #17324d;
+      background: linear-gradient(180deg, #f7fbff 0%, #eef6ff 100%);
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #d6e6f7;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 24px rgba(40, 94, 146, 0.08);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    p {
+      margin: 0 0 12px;
+      color: #4a6783;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    button {
+      flex: 1;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .primary {
+      color: #fff;
+      background: linear-gradient(135deg, #0f7bff 0%, #1b9cff 100%);
+    }
+    .ghost {
+      color: #12456f;
+      background: #eaf4ff;
+    }
+    pre {
+      margin: 0;
+      height: 220px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border-radius: 10px;
+      padding: 12px;
+      background: #0f2134;
+      color: #d9ebff;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>专题解析视频复制</h1>
+    <p>按配置表批量下载来源题目视频，再上传到目标题目。</p>
+    <div class="row">
+      <button id="health" class="ghost">检查本地助手</button>
+      <button id="dryRun" class="ghost">空跑检查</button>
+    </div>
+    <div class="row">
+      <button id="start" class="primary">开始批量复制</button>
+    </div>
+    <pre id="log">等待开始...</pre>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

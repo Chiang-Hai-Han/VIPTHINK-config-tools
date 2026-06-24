@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>简案自动配置工具</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --line: #d9e0ea;
+        --text: #1f2937;
+        --muted: #667085;
+        --primary: #1f6feb;
+        --primary-dark: #1557b0;
+        --ok: #0f9d58;
+        --warn: #d97706;
+        --error: #dc2626;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        width: 420px;
+        margin: 0;
+        padding: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, "Microsoft YaHei", "Segoe UI", sans-serif;
+        font-size: 13px;
+      }
+
+      .shell {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .title strong {
+        display: block;
+        font-size: 15px;
+        line-height: 20px;
+      }
+
+      .title span {
+        display: block;
+        color: var(--muted);
+        line-height: 18px;
+      }
+
+      .section {
+        padding: 12px;
+        border-top: 1px solid var(--line);
+      }
+
+      .section:first-of-type {
+        border-top: 0;
+      }
+
+      .section-title {
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .hint {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 18px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      button {
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: #9db5d6;
+        background: #f8fbff;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+        font-weight: 650;
+      }
+
+      .primary:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+
+      .status-card {
+        display: grid;
+        gap: 8px;
+      }
+
+      .status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f8fafc;
+        color: var(--muted);
+      }
+
+      .badge.running {
+        color: var(--primary);
+        border-color: #bfd4f6;
+        background: #eef5ff;
+      }
+
+      .badge.success {
+        color: var(--ok);
+        border-color: #b7e4c7;
+        background: #edf9f1;
+      }
+
+      .badge.error {
+        color: var(--error);
+        border-color: #f2b8b5;
+        background: #fff1f0;
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #e8eef7;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #1f6feb, #4f8df6);
+        transition: width 0.25s ease;
+      }
+
+      .meta {
+        color: var(--muted);
+        line-height: 18px;
+      }
+
+      pre {
+        margin: 12px 0 0;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #101828;
+        color: #e6edf7;
+        border-radius: 7px;
+        padding: 10px;
+        line-height: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="top">
+        <div class="title">
+          <strong>简案自动配置工具</strong>
+          <span>本地助手端口 8771</span>
+        </div>
+        <button id="health">检查状态</button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">准备工作</div>
+        <div class="grid">
+          <button id="openConfig">打开配置说明</button>
+          <button id="prepareWorkbook">创建配置表</button>
+        </div>
+        <p class="hint">在配置表里维护来源课件代码和目标课件代码的对应关系。</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">监听与调试</div>
+        <div class="grid">
+          <button id="captureGuide">查看监听说明</button>
+          <button id="runCapture">开始监听动作</button>
+        </div>
+        <p class="hint">如果后面还要补接口动作，可以继续用监听模式记录真实操作。</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">执行</div>
+        <div class="grid">
+          <button id="dryRun">检查任务</button>
+          <button id="start" class="primary">开始执行</button>
+        </div>
+        <p class="hint">执行时会自动搜索课件、复制或上传简案，并在完成后自动上架。</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">执行进度</div>
+        <div class="status-card">
+          <div class="status-row">
+            <span id="progressText">等待开始</span>
+            <span id="progressBadge" class="badge">未执行</span>
+          </div>
+          <div class="progress">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <div id="progressMeta" class="meta">还没有开始任务。</div>
+        </div>
+      </div>
+    </div>
+
+    <pre id="log">请先启动本地助手，再刷新教研后台页面一次，确保插件已经捕捉到 Session-Id。</pre>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

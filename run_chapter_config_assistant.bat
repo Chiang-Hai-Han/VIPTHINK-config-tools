@@ -1,19 +1,42 @@
-﻿@echo off
-chcp 65001 >nul
+@echo off
+setlocal
+
+set "PYTHON_CMD="
+
+python --version >nul 2>nul && set "PYTHON_CMD=python"
+
+if not defined PYTHON_CMD (
+  py -3 --version >nul 2>nul && set "PYTHON_CMD=py -3"
+)
+
+if not defined PYTHON_CMD if exist "%LocalAppData%\Programs\Python\Python312\python.exe" (
+  set "PYTHON_CMD=%LocalAppData%\Programs\Python\Python312\python.exe"
+)
+
+if not defined PYTHON_CMD if exist "%LocalAppData%\Programs\Python\Python314\python.exe" (
+  set "PYTHON_CMD=%LocalAppData%\Programs\Python\Python314\python.exe"
+)
+
+if not defined PYTHON_CMD (
+  echo [ERROR] Python was not found.
+  echo Please install Python or add py/python to PATH.
+  pause
+  exit /b 1
+)
+
 echo ========================================
-echo  讲次配置助手
+echo Chapter Config Assistant
 echo ========================================
 echo.
-echo 1. 启动本地助手 (端口 8768)
-echo 2. 请手动在 Chrome 中加载测试扩展：
-echo    chrome://extensions → 加载已解压的扩展
-echo    选择: chrome_extension_chapter_test 文件夹
+echo 1. Start local assistant on port 8768.
+echo 2. In Chrome, open chrome://extensions
+echo 3. Load unpacked extension folder:
+echo    chrome_extension_chapter_test
+echo 4. Refresh the courseware page once.
+echo 5. Open the extension and start config.
 echo.
-echo 3. 打开课件管理页面刷新一次，让插件捕获登录状态
-echo 4. 点击扩展图标 → 讲次配置工具 → 开始配置
-echo.
-echo 先编辑 讲次配置表.xlsx，填入要配置的讲次。
+echo Edit the Excel file first, then run config.
 echo ========================================
 echo.
-"C:\Users\jianghaihan\AppData\Local\Programs\Python\Python312\python.exe" "%~dp0local_chapter_config_assistant.py"
+call %PYTHON_CMD% "%~dp0local_chapter_config_assistant.py"
 pause

@@ -295,6 +295,19 @@ function stripHtml(value) {
     .trim();
 }
 
+function normalizeParagraphs(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\s*(?:<p\b[^>]*>.*?<\/p>\s*)+$/is.test(raw)) return raw;
+  if (!/[\r\n]/.test(raw)) return raw;
+  return raw
+    .split(/\r\n|\r|\n/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => `<p>${part}</p>`)
+    .join("");
+}
+
 function findValueByKeys(source, keys, visited = new Set()) {
   if (!source || typeof source !== "object") return "";
   if (visited.has(source)) return "";
@@ -571,7 +584,7 @@ async function resolveCnForSave(detail, coursewareCode) {
 function normalizeForSave(detail, attachmentId) {
   const data = { ...detail };
   const { paths, cnId } = extractCnPath(detail);
-  data.cover_url = String(attachmentId);
+  if (attachmentId !== undefined && attachmentId !== null) data.cover_url = String(attachmentId);
   data.cn_ids = paths;
   delete data.info;
   delete data.code;
@@ -711,6 +724,114 @@ async function processTask(task, dryRun, overwriteState) {
     url: uploaded.url,
     save: saved
   };
+}
+
+async function fetchCoursewareInfoUploadTasks(configPath = "") {
+  const response = await fetch(localUrl("/courseware-info-upload-tasks", { config: configPath }));
+  if (!response.ok) throw new Error(`课件信息配置表读取失败：${await response.text()}`);
+  const payload = await response.json();
+  return payload.tasks || [];
+}
+
+function applyCoursewareInfo(detail, task) {
+  if (task.courseware_name) detail.chapter_name = task.courseware_name;
+  if (task.content_name) detail.table_name = task.content_name;
+  if (task.teaching_goal) detail.description = normalizeParagraphs(task.teaching_goal);
+  if (task.lesson_intro) detail.about = normalizeParagraphs(task.lesson_intro);
+}
+
+async function processCoursewareInfoUploadTask(task) {
+  const code = task.courseware_code || task.code || "";
+  if (!code) throw new Error("课件信息任务缺少课件编码。");
+  sendStatus(`正在上传课件信息：${code}`);
+  const row = await queryCourseware(code);
+  const detail = await postJson(DETAIL_URL, { id: row.id, cn_ids: row.cn_ids });
+  const { cnId: resolvedCnId } = await resolveCnForSave(detail, code);
+  detail.cn_ids = resolvedCnId;
+  applyCoursewareInfo(detail, task);
+  const { data, cnId } = normalizeForSave(detail);
+  const saved = await postJson(SAVE_URL, { data: JSON.stringify(data), cn_ids: cnId });
+  return {
+    ok: true,
+    row: task.row,
+    code,
+    id: String(row.id),
+    save: saved
+  };
+}
+
+async function runCoursewareInfoUpload(configPath = "") {
+  sendStatus("正在读取课件信息上传任务");
+  const tasks = await fetchCoursewareInfoUploadTasks(configPath);
+  sendStatus(`课件信息上传共 ${tasks.length} 条任务`);
+  const results = [];
+  for (const task of tasks) {
+    try {
+      results.push(await processCoursewareInfoUploadTask(task));
+    } catch (error) {
+      const result = {
+        ok: false,
+        row: task.row,
+        code: task.courseware_code || "",
+        error: String(error.message || error)
+      };
+      results.push(result);
+      sendStatus(`课件信息上传失败：${result.code} ${result.error}`);
+    }
+  }
+  return { ok: results.every((item) => item.ok), count: results.length, results };
+}
+
+async function fetchSubjectNameUploadTasks(configPath = "") {
+  const response = await fetch(localUrl("/subject-name-upload-tasks", { config: configPath }));
+  if (!response.ok) throw new Error(`专题名称配置表读取失败：${await response.text()}`);
+  const payload = await response.json();
+  return payload.tasks || [];
+}
+
+async function processSubjectNameUploadTask(task) {
+  const code = task.courseware_code || task.code || "";
+  const subjectName = firstText(task.subject_name);
+  if (!code) throw new Error("专题名称任务缺少课件编码。");
+  if (!subjectName) throw new Error(`${code} 的专题名称为空。`);
+  sendStatus(`正在上传专题名称：${code}`);
+  const row = await queryCourseware(code);
+  const detail = await postJson(DETAIL_URL, { id: row.id, cn_ids: row.cn_ids });
+  const { cnId: resolvedCnId } = await resolveCnForSave(detail, code);
+  detail.cn_ids = resolvedCnId;
+  detail.subject_name = subjectName;
+  const { data, cnId } = normalizeForSave(detail);
+  const saved = await postJson(SAVE_URL, { data: JSON.stringify(data), cn_ids: cnId });
+  return {
+    ok: true,
+    row: task.row,
+    code,
+    id: String(row.id),
+    subject_name: subjectName,
+    save: saved
+  };
+}
+
+async function runSubjectNameUpload(configPath = "") {
+  sendStatus("正在读取专题名称上传任务");
+  const tasks = await fetchSubjectNameUploadTasks(configPath);
+  sendStatus(`专题名称上传共 ${tasks.length} 条任务`);
+  const results = [];
+  for (const task of tasks) {
+    try {
+      results.push(await processSubjectNameUploadTask(task));
+    } catch (error) {
+      const result = {
+        ok: false,
+        row: task.row,
+        code: task.courseware_code || "",
+        error: String(error.message || error)
+      };
+      results.push(result);
+      sendStatus(`专题名称上传失败：${result.code} ${result.error}`);
+    }
+  }
+  return { ok: results.every((item) => item.ok), count: results.length, results };
 }
 
 async function report(result) {
@@ -1325,6 +1446,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.type === "START_RESOURCE_COPY" || message.type === "DRY_RESOURCE_COPY") {
     runResourceCopy(message.type === "DRY_RESOURCE_COPY", message.configPath || "")
+      .then(sendResponse)
+      .catch((error) => sendResponse({ ok: false, error: String(error.message || error) }));
+    return true;
+  }
+  if (message.type === "START_COURSEWARE_INFO_UPLOAD") {
+    runCoursewareInfoUpload(message.configPath || "")
+      .then(sendResponse)
+      .catch((error) => sendResponse({ ok: false, error: String(error.message || error) }));
+    return true;
+  }
+  if (message.type === "START_SUBJECT_NAME_UPLOAD") {
+    runSubjectNameUpload(message.configPath || "")
       .then(sendResponse)
       .catch((error) => sendResponse({ ok: false, error: String(error.message || error) }));
     return true;

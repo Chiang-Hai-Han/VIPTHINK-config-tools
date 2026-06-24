@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "简案自动配置工具",
+  "version": "0.1.0",
+  "description": "下载指定课类与课件代码的简案 Excel，并按映射上传到目标课件。",
+  "permissions": ["storage", "webRequest"],
+  "host_permissions": [
+    "https://jy.vipthink.cn/*",
+    "http://127.0.0.1:8771/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "简案自动配置工具",
+    "default_popup": "popup.html"
+  }
+}

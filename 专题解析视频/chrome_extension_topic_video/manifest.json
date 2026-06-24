@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "专题解析视频复制助手",
+  "version": "0.1.0",
+  "description": "从来源题目下载指导视频并上传到目标题目",
+  "permissions": [
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8771/*",
+    "https://jy.vipthink.cn/*",
+    "https://aic-gw.vipthink.cn/*",
+    "https://*.aliyuncs.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "专题解析视频复制助手",
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "sample_pair": {
+    "source_title": "s1_v8_01-04_YY第1题",
+    "target_title": "s1_v7_01-04_TW第1题"
+  },
+  "replace_rules": [
+    {
+      "target_contains": "s1_v7_01-04_TW",
+      "source_contains": "s1_v8_01-04_YY",
+      "remark": "当前默认映射，后续可以继续往下加"
+    }
+  ]
+}

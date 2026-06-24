@@ -40,6 +40,10 @@ IMPORT_DATA_START_ROW = 3
 HEADERS = [
     "课件编码",
     "课件名称",
+    "内容名称",
+    "教学目标",
+    "课节简介",
+    "专题名称",
     "封面图片",
     "作业课件编码",
     "资源来源课件",
@@ -407,9 +411,10 @@ def ensure_config_file() -> None:
         sheet.title = SHEET_NAME
         existing = [text(cell.value) for cell in sheet[1]]
         changed = False
-        for col, header in enumerate(HEADERS, start=1):
-            if col > len(existing) or existing[col - 1] != header:
-                sheet.cell(1, col).value = header
+        for header in HEADERS:
+            if header not in existing:
+                sheet.cell(1, sheet.max_column + 1).value = header
+                existing.append(header)
                 changed = True
         if changed:
             try:
@@ -424,6 +429,9 @@ def ensure_config_file() -> None:
     sheet.append(HEADERS)
     sheet.append([
         "s4_v8_04_TW",
+        "",
+        "",
+        "",
         "",
         "",
         "s4_v8_04_TW_hw",
@@ -524,6 +532,10 @@ def load_rows(config_path: Path | None = None) -> list[dict]:
     idx = {
         "code": header_index(headers, ["课件编码", "courseware_code", "code"]),
         "name": header_index(headers, ["课件名称", "courseware_name", "name"]),
+        "content_name": header_index(headers, ["内容名称", "content_name", "table_name"]),
+        "teaching_goal": header_index(headers, ["教学目标", "teaching_goal", "teaching_target", "description"]),
+        "lesson_intro": header_index(headers, ["课节简介", "lesson_intro", "chapter_intro", "about"]),
+        "subject_name": header_index(headers, ["专题名称", "subject_name"]),
         "image": header_index(headers, ["封面图片", "image", "image_file"]),
         "homework": header_index(headers, ["作业课件编码", "线上作业编码", "homework_code", "target_code"]),
         "resource_source": header_index(headers, ["资源来源课件", "source_code", "copy_from_code"]),
@@ -546,6 +558,10 @@ def load_rows(config_path: Path | None = None) -> list[dict]:
             "row": row_number,
             "courseware_code": code,
             "courseware_name": text(row[idx["name"]] if idx["name"] is not None and idx["name"] < len(row) else ""),
+            "content_name": text(row[idx["content_name"]] if idx["content_name"] is not None and idx["content_name"] < len(row) else ""),
+            "teaching_goal": text(row[idx["teaching_goal"]] if idx["teaching_goal"] is not None and idx["teaching_goal"] < len(row) else ""),
+            "lesson_intro": text(row[idx["lesson_intro"]] if idx["lesson_intro"] is not None and idx["lesson_intro"] < len(row) else ""),
+            "subject_name": text(row[idx["subject_name"]] if idx["subject_name"] is not None and idx["subject_name"] < len(row) else ""),
             "image_file_in_sheet": text(row[idx["image"]] if idx["image"] is not None and idx["image"] < len(row) else ""),
             "homework_code": homework or f"{code}_hw",
             "resource_source_code": resource_source or code.replace("_TW", "_YY"),
@@ -666,6 +682,41 @@ def build_resource_copy_tasks(config_path: Path | None = None) -> list[dict]:
         }
         for row in load_rows(config_path)
     ]
+
+
+def build_courseware_info_upload_tasks(config_path: Path | None = None) -> list[dict]:
+    tasks = []
+    for row in load_rows(config_path):
+        info = {
+            "courseware_name": row["courseware_name"],
+            "content_name": row["content_name"],
+            "teaching_goal": row["teaching_goal"],
+            "lesson_intro": row["lesson_intro"],
+        }
+        if not any(info.values()):
+            continue
+        tasks.append({
+            "row": row["row"],
+            "courseware_code": row["courseware_code"],
+            **info,
+            "note": row["note"],
+        })
+    return tasks
+
+
+def build_subject_name_upload_tasks(config_path: Path | None = None) -> list[dict]:
+    tasks = []
+    for row in load_rows(config_path):
+        subject_name = row["subject_name"]
+        if not subject_name:
+            continue
+        tasks.append({
+            "row": row["row"],
+            "courseware_code": row["courseware_code"],
+            "subject_name": subject_name,
+            "note": row["note"],
+        })
+    return tasks
 
 
 def load_postlaunch_rows(config_path: Path | None = None) -> list[dict]:
@@ -870,6 +921,16 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/resource-copy-tasks":
                 selected = (parse_qs(parsed.query).get("config") or [""])[0]
                 tasks = build_resource_copy_tasks(resolve_workbook_path("prelaunch", selected))
+                self.send_json({"ok": True, "tasks": tasks, "count": len(tasks)})
+                return
+            if parsed.path == "/courseware-info-upload-tasks":
+                selected = (parse_qs(parsed.query).get("config") or [""])[0]
+                tasks = build_courseware_info_upload_tasks(resolve_workbook_path("prelaunch", selected))
+                self.send_json({"ok": True, "tasks": tasks, "count": len(tasks)})
+                return
+            if parsed.path == "/subject-name-upload-tasks":
+                selected = (parse_qs(parsed.query).get("config") or [""])[0]
+                tasks = build_subject_name_upload_tasks(resolve_workbook_path("prelaunch", selected))
                 self.send_json({"ok": True, "tasks": tasks, "count": len(tasks)})
                 return
             if parsed.path == "/workbook-candidates":
